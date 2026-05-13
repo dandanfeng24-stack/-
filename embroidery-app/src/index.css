@@ -1,0 +1,280 @@
+@import "tailwindcss";
+
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap');
+
+:root {
+  --color-primary: #C0392B;
+  --color-primary-dark: #922B21;
+  --color-primary-light: #E74C3C;
+  --color-gold: #D4AC0D;
+  --color-gold-light: #F4D03F;
+  --color-ink: #1a1a2e;
+  --color-cream: #FDF6E3;
+  --color-silk: #FAF0DC;
+  --color-jade: #1A6B4A;
+  --color-indigo: #2C3E7A;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  background-color: var(--color-cream);
+  color: var(--color-ink);
+  overflow-x: hidden;
+}
+
+h1, h2, h3, .font-serif {
+  font-family: 'Noto Serif SC', 'STSong', 'SimSun', serif;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+/* 传统回纹装饰分隔线 */
+.divider-pattern {
+  height: 2px;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    var(--color-gold) 20%,
+    var(--color-primary) 50%,
+    var(--color-gold) 80%,
+    transparent 100%
+  );
+  position: relative;
+}
+
+.divider-pattern::before {
+  content: '◆';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  color: var(--color-gold);
+  background: var(--color-cream);
+  padding: 0 8px;
+  font-size: 10px;
+}
+
+/* 丝绸纹理背景 */
+.bg-silk-texture {
+  background-image:
+    repeating-linear-gradient(
+      45deg,
+      transparent,
+      transparent 2px,
+      rgba(212, 172, 13, 0.03) 2px,
+      rgba(212, 172, 13, 0.03) 4px
+    );
+}
+
+/* 水墨渐变背景 */
+.bg-ink-gradient {
+  background: linear-gradient(135deg, #0d1117 0%, #1a1a2e 40%, #16213e 70%, #0d1117 100%);
+}
+
+/* 玻璃态卡片 */
+.glass-card {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(212, 172, 13, 0.2);
+}
+
+/* 国风渐变按钮 */
+.btn-primary {
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+  color: white;
+  padding: 10px 28px;
+  border-radius: 2px;
+  border: 1px solid var(--color-gold);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: 'Noto Serif SC', serif;
+  letter-spacing: 2px;
+  position: relative;
+  overflow: hidden;
+  display: inline-block;
+  text-decoration: none;
+}
+
+.btn-primary::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  transition: left 0.4s ease;
+}
+
+.btn-primary:hover::before {
+  left: 100%;
+}
+
+.btn-primary:hover {
+  box-shadow: 0 4px 20px rgba(192, 57, 43, 0.4);
+  transform: translateY(-1px);
+}
+
+/* 卡片悬停效果 */
+.card-hover {
+  transition: all 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.card-hover:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 20px 40px rgba(192, 57, 43, 0.15), 0 0 0 1px rgba(212, 172, 13, 0.3);
+}
+
+/* 图片缓慢放大 */
+.img-zoom {
+  overflow: hidden;
+}
+
+.img-zoom img {
+  transition: transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.img-zoom:hover img {
+  transform: scale(1.08);
+}
+
+/* 文字发光效果 */
+.text-glow {
+  text-shadow: 0 0 20px rgba(212, 172, 13, 0.5);
+}
+
+/* 滚动条美化 */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-silk);
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(var(--color-primary), var(--color-gold));
+  border-radius: 3px;
+}
+
+/* 动画关键帧 */
+@keyframes float-slow {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  33% { transform: translateY(-12px) rotate(1deg); }
+  66% { transform: translateY(-6px) rotate(-1deg); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInLeft {
+  from { opacity: 0; transform: translateX(-30px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes patternFlow {
+  0% { background-position: 0% 0%; }
+  100% { background-position: 100% 100%; }
+}
+
+.animate-float {
+  animation: float-slow 6s ease-in-out infinite;
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.7s ease forwards;
+}
+
+.animate-fade-in-left {
+  animation: fadeInLeft 0.7s ease forwards;
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.5s ease forwards;
+}
+
+/* 传承人卡片翻转效果 */
+.flip-card {
+  perspective: 1000px;
+  height: 380px;
+}
+
+.flip-card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  transform-style: preserve-3d;
+}
+
+.flip-card:hover .flip-card-inner {
+  transform: rotateY(180deg);
+}
+
+.flip-card-front,
+.flip-card-back {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.flip-card-back {
+  transform: rotateY(180deg);
+  background: linear-gradient(135deg, var(--color-primary-dark) 0%, var(--color-indigo) 100%);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 24px;
+  color: white;
+}
+
+/* 装饰性祥云图案 */
+.cloud-decoration::before {
+  content: '☁';
+  position: absolute;
+  color: rgba(212, 172, 13, 0.1);
+  font-size: 80px;
+  top: -20px;
+  right: -20px;
+  pointer-events: none;
+}
+
+/* 针线 Loading 动画 */
+.needle-loader {
+  width: 48px;
+  height: 48px;
+  border: 3px solid rgba(212, 172, 13, 0.2);
+  border-top-color: var(--color-primary);
+  border-right-color: var(--color-gold);
+  border-radius: 50%;
+  animation: float-slow 1.5s linear infinite;
+}
