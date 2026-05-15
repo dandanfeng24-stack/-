@@ -1,5 +1,5 @@
-import { useState, useRef } from 'react';
-import { motion, useInView } from 'framer-motion';
+import { useState, useRef, useEffect } from 'react';
+import { motion, useInView, AnimatePresence } from 'framer-motion';
 import { videos } from '../data/embroidery';
 import type { Video } from '../data/embroidery';
 
@@ -16,7 +16,61 @@ function formatNumber(n: number): string {
   return n.toString();
 }
 
-function VideoCard({ video, index }: { video: Video; index: number }) {
+function VideoModal({ video, onClose }: { video: Video; onClose: () => void }) {
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    document.addEventListener('keydown', handleKey);
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.removeEventListener('keydown', handleKey);
+      document.body.style.overflow = '';
+    };
+  }, [onClose]);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.25 }}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <motion.div
+        initial={{ scale: 0.92, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.92, opacity: 0 }}
+        transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+        className="relative w-full max-w-4xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button
+          onClick={onClose}
+          className="absolute -top-10 right-0 text-[rgba(232,220,200,0.6)] hover:text-[#C9A84C] transition-colors text-sm tracking-widest"
+        >
+          ESC 关闭
+        </button>
+        <div className="relative bg-black border border-[rgba(201,168,76,0.2)] rounded-2xl overflow-hidden shadow-2xl">
+          <div style={{ aspectRatio: '16/9' }}>
+            <iframe
+              src={`https://www.youtube.com/embed/${video.youtubeId}?autoplay=1&rel=0&modestbranding=1`}
+              title={video.title}
+              className="w-full h-full"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+            />
+          </div>
+          <div className="p-5 border-t border-[rgba(201,168,76,0.1)]">
+            <h3 className="font-serif font-bold text-[#E8DCC8] text-lg mb-1">{video.title}</h3>
+            <p className="text-sm text-[rgba(232,220,200,0.45)]">{video.description}</p>
+          </div>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+}
+
+function VideoCard({ video, index, onPlay }: { video: Video; index: number; onPlay: (v: Video) => void }) {
   const ref = useRef(null);
   const inView = useInView(ref, { once: true, margin: '-40px' });
   const [hovered, setHovered] = useState(false);
@@ -27,33 +81,30 @@ function VideoCard({ video, index }: { video: Video; index: number }) {
       initial={{ opacity: 0, y: 30 }}
       animate={inView ? { opacity: 1, y: 0 } : {}}
       transition={{ delay: index * 0.08, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-      className="card-art overflow-hidden flex flex-col cursor-pointer"
+      className="card-art rounded-2xl overflow-hidden flex flex-col cursor-pointer"
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
+      onClick={() => onPlay(video)}
     >
-      <div className="img-zoom relative bg-black" style={{ aspectRatio: '16/9' }}>
+      <div className="relative bg-black" style={{ aspectRatio: '16/9' }}>
         <img
           src={video.thumbnail}
           alt={video.title}
-          className="w-full h-full object-cover"
+          className={`w-full h-full object-cover transition-transform duration-700 ${hovered ? 'scale-105' : 'scale-100'}`}
           onError={(e) => { (e.target as HTMLImageElement).src = `https://picsum.photos/seed/${video.id}/600/340`; }}
         />
-        <div
-          className={`absolute inset-0 flex items-center justify-center bg-black/50 transition-opacity duration-300 ${
-            hovered ? 'opacity-100' : 'opacity-0'
-          }`}
-        >
-          <div className="w-14 h-14 rounded-full bg-[#C0392B]/90 flex items-center justify-center border border-[rgba(201,168,76,0.5)] shadow-xl">
-            <svg className="w-6 h-6 text-white ml-1" fill="currentColor" viewBox="0 0 24 24">
+        <div className={`absolute inset-0 flex items-center justify-center bg-black/50 transition-opacity duration-300 ${hovered ? 'opacity-100' : 'opacity-0'}`}>
+          <div className="w-16 h-16 rounded-full bg-[#C0392B]/90 flex items-center justify-center border-2 border-[rgba(201,168,76,0.6)] shadow-2xl">
+            <svg className="w-7 h-7 text-white ml-1" fill="currentColor" viewBox="0 0 24 24">
               <path d="M8 5v14l11-7z" />
             </svg>
           </div>
         </div>
-        <span className="absolute bottom-2 right-2 text-xs bg-black/80 text-[#E8DCC8] px-2 py-0.5 font-mono">
+        <span className="absolute bottom-2 right-2 text-xs bg-black/80 text-[#E8DCC8] px-2 py-0.5 font-mono rounded">
           {video.duration}
         </span>
         <span
-          className={`absolute top-2 left-2 text-xs px-2 py-0.5 ${
+          className={`absolute top-2 left-2 text-xs px-2 py-0.5 rounded ${
             video.category === 'tutorial'
               ? 'bg-[#2C3E7A]/90 text-white'
               : video.category === 'showcase'
@@ -92,11 +143,16 @@ function VideoCard({ video, index }: { video: Video; index: number }) {
 
 export default function VideoPage() {
   const [activeTab, setActiveTab] = useState<Tab>('tutorial');
+  const [playingVideo, setPlayingVideo] = useState<Video | null>(null);
   const headerRef = useRef(null);
   const headerInView = useInView(headerRef, { once: true });
   const filtered = videos.filter((v) => v.category === activeTab);
 
   return (
+    <>
+    <AnimatePresence>
+      {playingVideo && <VideoModal video={playingVideo} onClose={() => setPlayingVideo(null)} />}
+    </AnimatePresence>
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
@@ -171,7 +227,7 @@ export default function VideoPage() {
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mb-8 flex items-center justify-between p-5 border border-[rgba(201,168,76,0.2)] bg-[rgba(255,255,255,0.02)]"
+            className="mb-8 flex items-center justify-between p-5 border border-[rgba(201,168,76,0.2)] bg-[rgba(255,255,255,0.02)] rounded-2xl"
           >
             <div>
               <p className="text-[#E8DCC8] font-serif font-bold">分享您的刺绣作品</p>
@@ -190,7 +246,7 @@ export default function VideoPage() {
           className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
         >
           {filtered.map((video, index) => (
-            <VideoCard key={video.id} video={video} index={index} />
+            <VideoCard key={video.id} video={video} index={index} onPlay={setPlayingVideo} />
           ))}
         </motion.div>
 
@@ -202,5 +258,6 @@ export default function VideoPage() {
         )}
       </div>
     </motion.div>
+    </>
   );
 }

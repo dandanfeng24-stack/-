@@ -25,14 +25,17 @@ export default function HomePage() {
   const heroOpacity = useTransform(scrollYProgress, [0, 0.7], [1, 0]);
   const heroY = useTransform(scrollYProgress, [0, 1], ['0%', '20%']);
 
+  const PARTICLE_COLORS = ['#C9A84C', '#C9A84C', '#C0392B', '#E8DCC8', '#C9A84C', '#F4D03F'];
+
   // 固定粒子数据，避免每次渲染重新生成
   const particles = useMemo(() =>
-    Array.from({ length: 60 }, (_, i) => ({
-      left: `${(i * 37.3 + 11) % 100}%`,
-      size: 1.5 + (i % 4) * 0.8,
-      duration: `${7 + (i % 9)}s`,
-      delay: `${(i * 0.28) % 9}s`,
-      opacity: 0.25 + (i % 5) * 0.12,
+    Array.from({ length: 200 }, (_, i) => ({
+      left: `${(i * 13.7 + 3) % 100}%`,
+      size: 1.5 + (i % 6) * 1.2,
+      color: PARTICLE_COLORS[i % PARTICLE_COLORS.length],
+      duration: `${5 + (i % 10)}s`,
+      delay: `${(i * 0.15) % 10}s`,
+      opacity: 0.3 + (i % 6) * 0.12,
     })), []
   );
 
@@ -55,6 +58,7 @@ export default function HomePage() {
                 bottom: '-8px',
                 width: p.size,
                 height: p.size,
+                background: p.color,
                 animationDuration: p.duration,
                 animationDelay: p.delay,
                 opacity: p.opacity,
@@ -107,7 +111,7 @@ export default function HomePage() {
           <motion.span
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.3, duration: 0.8 }}
+            transition={{ delay: 0.1, duration: 0.8 }}
             className="section-number text-xs tracking-[8px] mb-6"
           >
             中国非物质文化遗产
@@ -116,7 +120,7 @@ export default function HomePage() {
           <motion.h1
             initial={{ opacity: 0, y: 70 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5, duration: 1, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ delay: 0.2, duration: 1, ease: [0.16, 1, 0.3, 1] }}
             className="font-serif font-black text-white mb-6"
             style={{
               fontSize: 'var(--text-hero)',
@@ -131,14 +135,14 @@ export default function HomePage() {
           <motion.div
             initial={{ scaleX: 0 }}
             animate={{ scaleX: 1 }}
-            transition={{ delay: 1.0, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ delay: 0.4, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
             className="gold-thin-line w-48 origin-left mb-7"
           />
 
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 1.1, duration: 0.8 }}
+            transition={{ delay: 0.5, duration: 0.8 }}
             className="font-serif text-[#E8DCC8] mb-3"
             style={{ fontSize: 'clamp(1rem, 2.5vw, 1.5rem)', letterSpacing: '0.05em' }}
           >
@@ -148,7 +152,7 @@ export default function HomePage() {
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 1.2, duration: 0.8 }}
+            transition={{ delay: 0.6, duration: 0.8 }}
             className="text-[rgba(232,220,200,0.45)] text-base mb-10 max-w-md"
           >
             汇聚苗绣、苏绣、蜀绣等六大非遗刺绣，让传统技艺在指尖绽放
@@ -157,7 +161,7 @@ export default function HomePage() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 1.3, duration: 0.7 }}
+            transition={{ delay: 0.7, duration: 0.7 }}
             className="flex flex-col sm:flex-row gap-4 items-start sm:items-center"
           >
             <Link to="/encyclopedia" className="btn-primary flex items-center gap-2 text-sm">
@@ -234,9 +238,8 @@ export default function HomePage() {
             </div>
           </ScrollReveal>
 
-          {/* 横向一排 - 桌面显示全部6个，手机横滑 */}
-          <div className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory"
-            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+          {/* 六大绣种 - 桌面6列，平板3列，手机2列 */}
+          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
             {embroideryTypes.map((item, i) => (
               <motion.div
                 key={item.id}
@@ -244,11 +247,9 @@ export default function HomePage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.08, duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-                className="flex-none snap-start"
-                style={{ width: 'clamp(220px, 16vw, 280px)' }}
               >
                 <Link to={`/encyclopedia/${item.id}`}>
-                  <div className="card-art overflow-hidden group cursor-pointer h-full">
+                  <div className="card-art rounded-2xl overflow-hidden group cursor-pointer h-full">
                     {/* 图片区 */}
                     <div className="relative overflow-hidden" style={{ aspectRatio: '3/4' }}>
                       <img
