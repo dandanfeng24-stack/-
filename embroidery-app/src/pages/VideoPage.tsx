@@ -26,60 +26,49 @@ function VideoCard({ video, index }: { video: Video; index: number }) {
       ref={ref}
       initial={{ opacity: 0, y: 30 }}
       animate={inView ? { opacity: 1, y: 0 } : {}}
-      transition={{ delay: index * 0.08, duration: 0.5 }}
-      className="card-hover bg-white rounded shadow-md overflow-hidden flex flex-col"
+      transition={{ delay: index * 0.08, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+      className="card-art overflow-hidden flex flex-col cursor-pointer"
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
-      {/* Thumbnail */}
-      <div className="img-zoom relative h-48 bg-gray-900">
+      <div className="img-zoom relative bg-black" style={{ aspectRatio: '16/9' }}>
         <img
           src={video.thumbnail}
           alt={video.title}
           className="w-full h-full object-cover"
-          onError={(e) => {
-            (e.target as HTMLImageElement).src = `https://picsum.photos/seed/${video.id}/600/340`;
-          }}
+          onError={(e) => { (e.target as HTMLImageElement).src = `https://picsum.photos/seed/${video.id}/600/340`; }}
         />
-        {/* Play button overlay */}
         <div
-          className={`absolute inset-0 flex items-center justify-center bg-black/40 transition-opacity duration-300 ${
+          className={`absolute inset-0 flex items-center justify-center bg-black/50 transition-opacity duration-300 ${
             hovered ? 'opacity-100' : 'opacity-0'
           }`}
         >
-          <div className="w-14 h-14 rounded-full bg-[var(--color-primary)]/90 flex items-center justify-center shadow-xl">
+          <div className="w-14 h-14 rounded-full bg-[#C0392B]/90 flex items-center justify-center border border-[rgba(201,168,76,0.5)] shadow-xl">
             <svg className="w-6 h-6 text-white ml-1" fill="currentColor" viewBox="0 0 24 24">
               <path d="M8 5v14l11-7z" />
             </svg>
           </div>
         </div>
-        {/* Duration */}
-        <span className="absolute bottom-2 right-2 text-xs bg-black/70 text-white px-1.5 py-0.5 rounded font-mono">
+        <span className="absolute bottom-2 right-2 text-xs bg-black/80 text-[#E8DCC8] px-2 py-0.5 font-mono">
           {video.duration}
         </span>
-        {/* Category badge */}
         <span
-          className={`absolute top-2 left-2 text-xs px-2 py-0.5 rounded-sm font-serif ${
+          className={`absolute top-2 left-2 text-xs px-2 py-0.5 ${
             video.category === 'tutorial'
-              ? 'bg-blue-600/90 text-white'
+              ? 'bg-[#2C3E7A]/90 text-white'
               : video.category === 'showcase'
-              ? 'bg-[var(--color-gold)]/90 text-black'
-              : 'bg-[var(--color-primary)]/90 text-white'
+              ? 'bg-[rgba(201,168,76,0.9)] text-[#080c14]'
+              : 'bg-[#C0392B]/90 text-white'
           }`}
         >
           {video.category === 'tutorial' ? '教程' : video.category === 'showcase' ? '展示' : '投稿'}
         </span>
       </div>
-
-      {/* Content */}
-      <div className="p-4 flex flex-col flex-1">
-        <h3 className="font-serif font-bold text-[var(--color-ink)] mb-2 leading-snug line-clamp-2">
-          {video.title}
-        </h3>
-        <p className="text-sm text-gray-500 leading-relaxed line-clamp-2 flex-1">{video.description}</p>
-
-        <div className="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between">
-          <div className="flex items-center gap-3 text-xs text-gray-400">
+      <div className="p-4 flex flex-col flex-1 border-t border-[rgba(201,168,76,0.1)]">
+        <h3 className="font-serif font-bold text-[#E8DCC8] mb-2 leading-snug line-clamp-2">{video.title}</h3>
+        <p className="text-sm text-[rgba(232,220,200,0.38)] leading-relaxed line-clamp-2 flex-1">{video.description}</p>
+        <div className="mt-4 pt-3 border-t border-[rgba(201,168,76,0.08)] flex items-center justify-between">
+          <div className="flex items-center gap-3 text-xs text-[rgba(232,220,200,0.28)]">
             <span className="flex items-center gap-1">
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -94,7 +83,7 @@ function VideoCard({ video, index }: { video: Video; index: number }) {
               {formatNumber(video.likes)}
             </span>
           </div>
-          <div className="text-xs text-gray-400 font-serif">{video.uploader}</div>
+          <span className="text-xs text-[rgba(232,220,200,0.22)]">{video.uploader}</span>
         </div>
       </div>
     </motion.div>
@@ -105,7 +94,6 @@ export default function VideoPage() {
   const [activeTab, setActiveTab] = useState<Tab>('tutorial');
   const headerRef = useRef(null);
   const headerInView = useInView(headerRef, { once: true });
-
   const filtered = videos.filter((v) => v.category === activeTab);
 
   return (
@@ -113,51 +101,62 @@ export default function VideoPage() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.6 }}
-      className="min-h-screen bg-[#FDF6E3] bg-silk-texture"
+      className="min-h-screen bg-[#080c14]"
     >
       {/* Hero */}
-      <div className="bg-ink-gradient relative overflow-hidden" style={{ minHeight: '280px' }}>
-        {/* Decorative circles */}
-        <div className="absolute top-10 left-10 w-40 h-40 rounded-full bg-[var(--color-primary)]/10 blur-3xl" />
-        <div className="absolute bottom-0 right-10 w-60 h-60 rounded-full bg-[var(--color-gold)]/10 blur-3xl" />
-
-        <div className="relative z-10 flex flex-col items-center justify-center text-center px-4 py-20" ref={headerRef}>
+      <div
+        className="bg-[#040609] relative overflow-hidden"
+        style={{ minHeight: 'clamp(260px, 45vh, 480px)' }}
+      >
+        <div className="absolute top-10 left-10 w-64 h-64 rounded-full bg-[rgba(192,57,43,0.06)] blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 right-10 w-80 h-80 rounded-full bg-[rgba(201,168,76,0.05)] blur-3xl pointer-events-none" />
+        <div
+          className="deco-bg-char absolute right-0 top-1/2 -translate-y-1/2 select-none"
+          style={{ fontSize: 'clamp(10rem, 28vw, 24rem)' }}
+        >
+          影
+        </div>
+        <div
+          className="relative z-10 flex flex-col justify-end h-full px-8 md:px-16 pb-12"
+          style={{ minHeight: 'clamp(260px, 45vh, 480px)' }}
+          ref={headerRef}
+        >
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={headerInView ? { opacity: 1, y: 0 } : {}}
-            transition={{ duration: 0.8 }}
+            transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
           >
-            <p className="text-[var(--color-gold)] tracking-[6px] text-xs mb-3 font-serif">VIDEO CENTER</p>
-            <h1 className="text-white text-4xl md:text-6xl font-serif font-bold tracking-widest mb-4">
+            <p className="text-[#C9A84C] tracking-[8px] text-xs mb-3">VIDEO CENTER</p>
+            <h1
+              className="text-white font-serif font-black leading-none"
+              style={{ fontSize: 'var(--text-display)', letterSpacing: 'var(--tracking-tight)' }}
+            >
               视频中心
             </h1>
-            <div className="divider-pattern w-40 mx-auto my-4" />
-            <p className="text-white/60 font-serif tracking-wide">
-              观赏非遗刺绣的精湛工艺，与大师同行
-            </p>
+            <div className="gold-thin-line w-48 mt-5" />
           </motion.div>
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="bg-white border-b border-gray-100 sticky top-0 z-20 shadow-sm">
+      <div className="bg-[#080c14]/98 backdrop-blur border-b border-[rgba(201,168,76,0.12)] sticky top-0 z-20">
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex items-center">
             {tabs.map((tab) => (
               <button
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key)}
-                className={`relative px-6 py-4 font-serif text-sm tracking-wider transition-colors duration-200 ${
+                className={`relative px-6 py-4 text-sm tracking-wider transition-colors duration-200 font-serif ${
                   activeTab === tab.key
-                    ? 'text-[var(--color-primary)]'
-                    : 'text-gray-500 hover:text-[var(--color-ink)]'
+                    ? 'text-[#C9A84C]'
+                    : 'text-[rgba(232,220,200,0.4)] hover:text-[rgba(232,220,200,0.7)]'
                 }`}
               >
                 {tab.label}
                 {activeTab === tab.key && (
                   <motion.div
                     layoutId="tab-underline"
-                    className="absolute bottom-0 left-0 right-0 h-0.5 bg-[var(--color-gold)]"
+                    className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#C0392B]"
                   />
                 )}
               </button>
@@ -166,22 +165,19 @@ export default function VideoPage() {
         </div>
       </div>
 
-      {/* Content */}
+      {/* 内容 */}
       <div className="max-w-7xl mx-auto px-4 py-12">
-        {/* User upload CTA */}
         {activeTab === 'user' && (
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mb-8 flex items-center justify-between p-4 bg-white rounded shadow-sm border border-[var(--color-gold)]/20"
+            className="mb-8 flex items-center justify-between p-5 border border-[rgba(201,168,76,0.2)] bg-[rgba(255,255,255,0.02)]"
           >
-            <div className="font-serif">
-              <p className="text-[var(--color-ink)] font-bold">分享您的刺绣作品</p>
-              <p className="text-sm text-gray-500 mt-0.5">上传视频，让更多人欣赏您的技艺</p>
+            <div>
+              <p className="text-[#E8DCC8] font-serif font-bold">分享您的刺绣作品</p>
+              <p className="text-sm text-[rgba(232,220,200,0.4)] mt-0.5">上传视频，让更多人欣赏您的技艺</p>
             </div>
-            <button className="btn-primary text-sm whitespace-nowrap">
-              ＋ 上传我的作品
-            </button>
+            <button className="btn-primary text-sm whitespace-nowrap">＋ 上传作品</button>
           </motion.div>
         )}
 
@@ -191,7 +187,7 @@ export default function VideoPage() {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.4 }}
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8"
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
         >
           {filtered.map((video, index) => (
             <VideoCard key={video.id} video={video} index={index} />
@@ -199,7 +195,7 @@ export default function VideoPage() {
         </motion.div>
 
         {filtered.length === 0 && (
-          <div className="text-center py-24 text-gray-400 font-serif">
+          <div className="text-center py-24 text-[rgba(232,220,200,0.3)] font-serif">
             <p className="text-4xl mb-4">🎬</p>
             <p>该分类暂无视频</p>
           </div>
