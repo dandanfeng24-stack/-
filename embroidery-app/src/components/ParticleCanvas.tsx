@@ -1,279 +1,405 @@
 import { useEffect, useRef } from 'react';
 
-// ── Pattern generators ────────────────────────────────────────────────────────
-function rosePattern(cx: number, cy: number, scale: number, n: number): [number, number][] {
-  // Rose curve r = cos(4θ) → 8 petals
-  const pts: [number, number][] = [];
-  for (let i = 0; i < n; i++) {
-    const t = (i / n) * 2 * Math.PI;
-    const r = scale * Math.abs(Math.cos(4 * t));
-    pts.push([cx + r * Math.cos(t), cy + r * Math.sin(t)]);
-  }
-  return pts;
-}
+// ── Constants ─────────────────────────────────────────────────────────────────
+const N = 10000;
+const TAU = Math.PI * 2;
 
-function butterflyPattern(cx: number, cy: number, scale: number, n: number): [number, number][] {
-  // Butterfly curve: r = e^sin(θ) - 2cos(4θ) + sin⁵((2θ-π)/24)
-  const pts: [number, number][] = [];
-  for (let i = 0; i < n; i++) {
-    const t = (i / n) * 2 * Math.PI;
-    const r = scale * 0.35 * (
-      Math.exp(Math.sin(t)) -
-      2 * Math.cos(4 * t) +
-      Math.pow(Math.sin((2 * t - Math.PI) / 24), 5)
-    );
-    pts.push([cx + r * Math.cos(t), cy + r * Math.sin(t)]);
-  }
-  return pts;
-}
+const PHASE_FLOW     = 0;
+const PHASE_FORMING  = 1;
+const PHASE_HOLD     = 2;
+const PHASE_DISPERSE = 3;
 
-function phoenixPattern(cx: number, cy: number, scale: number, n: number): [number, number][] {
-  // Three-arm spiral (phoenix tail feathers)
-  const pts: [number, number][] = [];
-  const arms = 3;
-  for (let i = 0; i < n; i++) {
-    const arm = i % arms;
-    const frac = Math.floor(i / arms) / Math.floor(n / arms);
-    const baseAngle = (arm * 2 * Math.PI) / arms - Math.PI / 2;
-    const angle = baseAngle + frac * 2.8 * Math.PI;
-    const r = scale * 0.12 + scale * 0.62 * frac;
-    pts.push([cx + r * Math.cos(angle), cy + r * Math.sin(angle)]);
-  }
-  return pts;
-}
+const DUR_FLOW     = 320;
+const DUR_FORMING  = 240;
+const DUR_HOLD     = 180;
+const DUR_DISPERSE = 200;
 
-function peonyPattern(cx: number, cy: number, scale: number, n: number): [number, number][] {
-  // Layered concentric petals (牡丹)
-  const pts: [number, number][] = [];
-  const layers = 5;
-  const perLayer = Math.floor(n / layers);
-  for (let l = 0; l < layers; l++) {
-    const r = scale * ((l + 1) / layers) * 0.85;
-    const petals = 6 + l * 2;
-    const count = l === layers - 1 ? n - pts.length : perLayer;
-    for (let i = 0; i < count; i++) {
-      const t = (i / perLayer) * 2 * Math.PI;
-      const petal = Math.cos(petals * t * 0.5);
-      const rr = r * (0.75 + 0.25 * petal);
-      pts.push([cx + rr * Math.cos(t), cy + rr * Math.sin(t)]);
+// Gold/red/ivory palette — [r,g,b]
+const PALETTE: [number,number,number][] = [
+  [240, 192,  55],   // bright gold
+  [201, 168,  76],   // muted gold
+  [220, 148,  28],   // amber
+  [248, 220, 130],   // pale gold
+  [192,  57,  43],   // crimson
+  [235,  90,  40],   // orange-red
+  [242, 234, 205],   // ivory
+];
+const COLOR_RATIOS = [0.28, 0.22, 0.18, 0.12, 0.08, 0.05, 0.07];
+
+// pre-assign colors at module level (stable across re-renders)
+const colorAssign = new Uint8Array(N);
+(function () {
+  const thresholds = COLOR_RATIOS.reduce((acc: number[], w, i) => {
+    acc.push((acc[i - 1] ?? 0) + w);
+    return acc;
+  }, []);
+  for (let i = 0; i < N; i++) {
+    const r = Math.random();
+    colorAssign[i] = thresholds.findIndex(t => r < t);
+  }
+})();
+
+// ── Pattern generators (return Float32Array [x0,y0, x1,y1, ...] length N*2) ─
+
+function patternPlum(cx: number, cy: number, sc: number): Float32Array {
+  const out = new Float32Array(N * 2);
+  let idx = 0;
+  const petals = 5;
+  const pR   = sc * 0.40;
+  const pRad = sc * 0.43;
+
+  // stamen center
+  const nc = Math.floor(N * 0.09);
+  for (let i = 0; i < nc; i++) {
+    const t = (i / nc) * TAU;
+    const ring = (i % 10) / 10;
+    const r = pR * 0.20 * ring;
+    out[idx++] = cx + r * Math.cos(t);
+    out[idx++] = cy + r * Math.sin(t);
+  }
+  // five petals
+  const np = Math.floor((N - nc) / petals);
+  for (let p = 0; p < petals; p++) {
+    const ba  = (p / petals) * TAU - Math.PI / 2;
+    const pcx = cx + pR * 0.60 * Math.cos(ba);
+    const pcy = cy + pR * 0.60 * Math.sin(ba);
+    for (let i = 0; i < np; i++) {
+      const t    = (i / np) * TAU;
+      const ring = (i % 14) / 14;
+      const r    = pRad * 0.46 * ring * (0.55 + 0.45 * Math.cos(t));
+      out[idx++] = pcx + r * Math.cos(t);
+      out[idx++] = pcy + r * Math.sin(t);
     }
   }
-  return pts;
+  while (idx < N * 2 - 1) {
+    const t = Math.random() * TAU;
+    out[idx++] = cx + sc * 0.04 * Math.cos(t);
+    out[idx++] = cy + sc * 0.04 * Math.sin(t);
+  }
+  return out;
 }
 
-// ── Main component ────────────────────────────────────────────────────────────
-const PATTERNS = [rosePattern, butterflyPattern, phoenixPattern, peonyPattern];
-const PATTERN_NAMES = ['玫瑰', '蝴蝶', '凤凰', '牡丹'];
-const COLORS = [
-  '#C9A84C', '#C9A84C', '#C9A84C',
-  '#F4D03F', '#E8C060',
-  '#C0392B', '#E74C3C',
-  '#F0E6C8', '#E8DCC8',
-];
-
-interface Particle {
-  x: number; y: number;
-  tx: number; ty: number;
-  vx: number; vy: number;
-  color: string;
-  size: number;
-  alpha: number;
-  twinkleOffset: number;
-  twinkleSpeed: number;
+function patternButterfly(cx: number, cy: number, sc: number): Float32Array {
+  const out = new Float32Array(N * 2);
+  const passes = 5;
+  const pp = Math.floor(N / passes);
+  for (let pass = 0; pass < passes; pass++) {
+    const off = (pass - 2) * 0.015;
+    for (let i = 0; i < pp; i++) {
+      const t = (i / pp) * TAU + off;
+      const r = sc * 0.37 * (
+        Math.exp(Math.sin(t)) -
+        2.0 * Math.cos(4 * t) +
+        Math.pow(Math.sin((2 * t - Math.PI) / 24), 5)
+      );
+      const base = (pass * pp + i) * 2;
+      out[base]     = cx + r * Math.cos(t);
+      out[base + 1] = cy + r * Math.sin(t);
+    }
+  }
+  return out;
 }
 
+function patternLotus(cx: number, cy: number, sc: number): Float32Array {
+  const out = new Float32Array(N * 2);
+  let idx = 0;
+
+  const addPetalRing = (count: number, petals: number, dist: number, rPetal: number, rot: number) => {
+    const pp = Math.floor(count / petals);
+    for (let p = 0; p < petals; p++) {
+      const ba  = (p / petals) * TAU + rot;
+      const pcx = cx + dist * Math.cos(ba);
+      const pcy = cy + dist * Math.sin(ba);
+      for (let i = 0; i < pp; i++) {
+        const t    = (i / pp) * TAU;
+        const ring = (i % 12) / 12;
+        const a    = rPetal * ring * (0.35 + 0.65 * Math.abs(Math.cos(t)));
+        const b    = rPetal * 0.4 * ring * (0.35 + 0.65 * Math.abs(Math.sin(t)));
+        const lx   = a * Math.cos(t);
+        const ly   = b * Math.sin(t);
+        out[idx++] = pcx + lx * Math.cos(ba) - ly * Math.sin(ba);
+        out[idx++] = pcy + lx * Math.sin(ba) + ly * Math.cos(ba);
+      }
+    }
+  };
+
+  // center
+  const nc = Math.floor(N * 0.07);
+  for (let i = 0; i < nc; i++) {
+    const t = (i / nc) * TAU;
+    const r = sc * 0.10 * ((i % 9) / 9);
+    out[idx++] = cx + r * Math.cos(t);
+    out[idx++] = cy + r * Math.sin(t);
+  }
+  addPetalRing(Math.floor(N * 0.36), 8, sc * 0.29, sc * 0.27, 0);
+  addPetalRing(Math.floor(N * 0.54), 8, sc * 0.56, sc * 0.38, Math.PI / 8);
+
+  while (idx < N * 2 - 1) {
+    const t = Math.random() * TAU;
+    out[idx++] = cx + sc * 0.04 * Math.cos(t);
+    out[idx++] = cy + sc * 0.04 * Math.sin(t);
+  }
+  return out;
+}
+
+function patternPhoenix(cx: number, cy: number, sc: number): Float32Array {
+  const out = new Float32Array(N * 2);
+  const arms = 3;
+  const passes = 4;
+  const ppArmPass = Math.floor(N / (arms * passes));
+  for (let arm = 0; arm < arms; arm++) {
+    const ba = (arm / arms) * TAU - Math.PI / 2;
+    for (let pass = 0; pass < passes; pass++) {
+      const radOff = (pass - 1.5) * sc * 0.022;
+      for (let i = 0; i < ppArmPass; i++) {
+        const frac = i / ppArmPass;
+        const angle = ba + frac * 2.5 * Math.PI;
+        const r     = sc * 0.07 + sc * 0.68 * frac + radOff;
+        const wave  = sc * 0.025 * Math.sin(frac * TAU * 3.5);
+        const base  = (arm * passes * ppArmPass + pass * ppArmPass + i) * 2;
+        out[base]     = cx + (r + wave) * Math.cos(angle);
+        out[base + 1] = cy + (r + wave) * Math.sin(angle);
+      }
+    }
+  }
+  let filled = arms * passes * ppArmPass * 2;
+  while (filled < N * 2 - 1) {
+    const t = Math.random() * TAU;
+    const r = sc * 0.05 * Math.random();
+    out[filled++] = cx + r * Math.cos(t);
+    out[filled++] = cy + r * Math.sin(t);
+  }
+  return out;
+}
+
+const PATTERNS = [patternPlum, patternButterfly, patternLotus, patternPhoenix];
+
+// ── Curl-like noise fields ────────────────────────────────────────────────────
+function noiseVx(x: number, y: number, t: number): number {
+  return (
+    Math.sin(x * 0.0028 + t * 0.43) * Math.cos(y * 0.0021 + t * 0.19) * 1.7 +
+    Math.sin(x * 0.007  - y * 0.005 + t * 0.31) * 0.95 +
+    Math.cos(x * 0.0013 + y * 0.0018 + t * 0.56) * 1.1
+  );
+}
+function noiseVy(x: number, y: number, t: number): number {
+  return (
+    Math.cos(x * 0.0026 + t * 0.39) * Math.sin(y * 0.0030 - t * 0.23) * 1.7 +
+    Math.cos(x * 0.006  + y * 0.0044 + t * 0.27) * 0.95 +
+    Math.sin(x * 0.0015 - y * 0.0023 + t * 0.49) * 1.1
+  );
+}
+
+// ── Component ─────────────────────────────────────────────────────────────────
 export default function ParticleCanvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const glowRef   = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const ctx = canvas.getContext('2d') as CanvasRenderingContext2D;
+    const canvas = canvasRef.current!;
+    const glow   = glowRef.current!;
+    const ctx    = canvas.getContext('2d') as CanvasRenderingContext2D;
+    const gCtx   = glow.getContext('2d')   as CanvasRenderingContext2D;
 
-    let animId: number;
-    let W = 0, H = 0;
-    const N = 500;
+    let W = 0, H = 0, animId = 0;
 
     function resize() {
-      W = canvas!.offsetWidth;
-      H = canvas!.offsetHeight;
-      canvas!.width = W * devicePixelRatio;
-      canvas!.height = H * devicePixelRatio;
+      W = canvas.offsetWidth;
+      H = canvas.offsetHeight;
+      canvas.width = W * devicePixelRatio;
+      canvas.height = H * devicePixelRatio;
+      glow.width  = Math.round(W * devicePixelRatio * 0.4);
+      glow.height = Math.round(H * devicePixelRatio * 0.4);
       ctx.scale(devicePixelRatio, devicePixelRatio);
+      gCtx.scale(devicePixelRatio * 0.4, devicePixelRatio * 0.4);
     }
     resize();
 
-    // Init particles scattered across screen
-    const particles: Particle[] = Array.from({ length: N }, (_, i) => ({
-      x: Math.random() * W,
-      y: Math.random() * H,
-      tx: W / 2, ty: H / 2,
-      vx: 0, vy: 0,
-      color: COLORS[i % COLORS.length],
-      size: 1.2 + (i % 5) * 0.5,
-      alpha: 0.6 + (i % 4) * 0.1,
-      twinkleOffset: Math.random() * Math.PI * 2,
-      twinkleSpeed: 0.03 + Math.random() * 0.04,
-    }));
+    // ── Particle state ──────────────────────────────────────────────────────
+    const px  = new Float32Array(N);
+    const py  = new Float32Array(N);
+    const pvx = new Float32Array(N);
+    const pvy = new Float32Array(N);
+    const ptx = new Float32Array(N);
+    const pty = new Float32Array(N);
+    const psz = new Float32Array(N);
 
-    // Cycle state
-    const PHASES = { FORMING: 0, HOLD: 1, SCATTERING: 2 };
-    let phase = PHASES.FORMING;
-    let patternIdx = 0;
-    let frame = 0;
+    // start clustered near center
+    for (let i = 0; i < N; i++) {
+      const a = Math.random() * TAU;
+      const r = 20 + Math.random() * Math.min(W, H) * 0.18;
+      px[i]  = W / 2 + r * Math.cos(a);
+      py[i]  = H / 2 + r * Math.sin(a);
+      pvx[i] = (Math.random() - 0.5) * 1.5;
+      pvy[i] = (Math.random() - 0.5) * 1.5;
+      psz[i] = 0.8 + (i % 6) * 0.25;
+    }
 
-    const FORM_FRAMES = 160;
-    const HOLD_FRAMES = 110;
-    const SCATTER_FRAMES = 70;
+    // ── Phase state ─────────────────────────────────────────────────────────
+    let phase      = PHASE_FLOW;
+    let pFrame     = 0;
+    let patIdx     = 0;
+    let T          = 0;           // noise time
 
-    function setTargets(idx: number) {
-      const scale = Math.min(W, H) * 0.36;
-      const pts = PATTERNS[idx](W / 2, H / 2, scale, N);
-      // Nearest-neighbor assignment for smoother morph (simplified: sort by angle)
-      pts.sort((a, b) => Math.atan2(a[1] - H / 2, a[0] - W / 2) - Math.atan2(b[1] - H / 2, b[0] - W / 2));
+    function assignPattern(idx: number) {
+      const pts = PATTERNS[idx](W / 2, H / 2, Math.min(W, H) * 0.34);
+      // shuffle assignment
+      const order = Array.from({ length: N }, (_,i) => i);
+      for (let i = N - 1; i > 0; i--) {
+        const j = (Math.random() * (i + 1)) | 0;
+        const tmp = order[i]; order[i] = order[j]; order[j] = tmp;
+      }
       for (let i = 0; i < N; i++) {
-        particles[i].tx = pts[i][0];
-        particles[i].ty = pts[i][1];
+        ptx[order[i]] = pts[i * 2];
+        pty[order[i]] = pts[i * 2 + 1];
       }
     }
 
-    function scatterTargets() {
-      for (const p of particles) {
-        const angle = Math.random() * Math.PI * 2;
-        const r = 0.3 * Math.min(W, H) + Math.random() * Math.max(W, H) * 0.55;
-        p.tx = W / 2 + r * Math.cos(angle);
-        p.ty = H / 2 + r * Math.sin(angle);
+    function assignScatter() {
+      for (let i = 0; i < N; i++) {
+        const a = Math.random() * TAU;
+        const r = Math.min(W, H) * (0.06 + Math.random() * 0.30);
+        ptx[i] = W / 2 + r * Math.cos(a);
+        pty[i] = H / 2 + r * Math.sin(a);
       }
     }
 
-    setTargets(0);
+    assignScatter();
 
-    let labelAlpha = 0;
-    let labelFadeIn = true;
+    // ── Draw one frame of particles (into context c, at coordinate scale sc) ─
+    function drawParticles(c: CanvasRenderingContext2D, sc: number) {
+      for (let ci = 0; ci < PALETTE.length; ci++) {
+        const [r, g, b] = PALETTE[ci];
+        c.fillStyle = `rgb(${r},${g},${b})`;
+        c.beginPath();
+        for (let i = 0; i < N; i++) {
+          if (colorAssign[i] !== ci) continue;
+          const x = px[i] / sc;
+          const y = py[i] / sc;
+          const s = psz[i] / sc;
+          c.moveTo(x + s, y);
+          c.arc(x, y, s, 0, TAU);
+        }
+        c.fill();
+      }
+    }
 
+    // ── Main loop ────────────────────────────────────────────────────────────
     function tick() {
-      frame++;
-      ctx.clearRect(0, 0, W, H);
+      pFrame++;
+      T += 0.007;
 
-      // Phase transitions
-      if (phase === PHASES.FORMING && frame >= FORM_FRAMES) {
-        phase = PHASES.HOLD;
-        frame = 0;
-        labelFadeIn = true;
-      } else if (phase === PHASES.HOLD && frame >= HOLD_FRAMES) {
-        phase = PHASES.SCATTERING;
-        frame = 0;
-        labelFadeIn = false;
-        scatterTargets();
-      } else if (phase === PHASES.SCATTERING && frame >= SCATTER_FRAMES) {
-        phase = PHASES.FORMING;
-        frame = 0;
-        patternIdx = (patternIdx + 1) % PATTERNS.length;
-        setTargets(patternIdx);
+      // phase transitions
+      if (phase === PHASE_FLOW && pFrame >= DUR_FLOW) {
+        phase = PHASE_FORMING; pFrame = 0;
+        assignPattern(patIdx);
+      } else if (phase === PHASE_FORMING && pFrame >= DUR_FORMING) {
+        phase = PHASE_HOLD; pFrame = 0;
+      } else if (phase === PHASE_HOLD && pFrame >= DUR_HOLD) {
+        phase = PHASE_DISPERSE; pFrame = 0;
+        assignScatter();
+      } else if (phase === PHASE_DISPERSE && pFrame >= DUR_DISPERSE) {
+        phase = PHASE_FLOW; pFrame = 0;
+        patIdx = (patIdx + 1) % PATTERNS.length;
       }
 
-      // Label fade
-      if (phase === PHASES.HOLD) {
-        if (labelFadeIn) labelAlpha = Math.min(1, labelAlpha + 0.03);
-      } else {
-        labelAlpha = Math.max(0, labelAlpha - 0.05);
-      }
+      // ── physics update ──
+      const damp    = 0.87;
+      const maxSpd  = 4.2;
+      const cx      = W / 2;
+      const cy      = H / 2;
+      const jitter  = 0.20;
 
-      // Spring coefficient per phase
-      const stiffness =
-        phase === PHASES.FORMING ? 0.055 :
-        phase === PHASES.SCATTERING ? 0.04 : 0;
-      const damping = 0.82;
-
-      // Draw particles
       for (let i = 0; i < N; i++) {
-        const p = particles[i];
+        const x = px[i], y = py[i];
 
-        // Spring physics toward target
-        if (phase !== PHASES.HOLD) {
-          p.vx += (p.tx - p.x) * stiffness;
-          p.vy += (p.ty - p.y) * stiffness;
+        if (phase === PHASE_FLOW) {
+          pvx[i] += noiseVx(x, y, T) * 0.25;
+          pvy[i] += noiseVy(x, y, T) * 0.25;
+          pvx[i] += (cx - x) * 0.00065;   // soft center pull
+          pvy[i] += (cy - y) * 0.00065;
+          pvx[i] += (Math.random() - 0.5) * jitter;
+          pvy[i] += (Math.random() - 0.5) * jitter;
+
+        } else if (phase === PHASE_FORMING) {
+          const prog  = Math.min(1, pFrame / DUR_FORMING);
+          const stiff = 0.018 + prog * 0.065;
+          pvx[i] += (ptx[i] - x) * stiff;
+          pvy[i] += (pty[i] - y) * stiff;
+          pvx[i] += (Math.random() - 0.5) * jitter * 0.4;
+          pvy[i] += (Math.random() - 0.5) * jitter * 0.4;
+
+        } else if (phase === PHASE_HOLD) {
+          pvx[i] += (ptx[i] - x) * 0.22;
+          pvy[i] += (pty[i] - y) * 0.22;
+          // breathing pulse
+          const breath = 0.010 * Math.sin(T * 4 + i * 0.008);
+          pvx[i] += (x - cx) * breath;
+          pvy[i] += (y - cy) * breath;
+          pvx[i] += (Math.random() - 0.5) * 0.30;
+          pvy[i] += (Math.random() - 0.5) * 0.30;
+
+        } else {
+          // DISPERSE
+          pvx[i] += (ptx[i] - x) * 0.028;
+          pvy[i] += (pty[i] - y) * 0.028;
+          pvx[i] += (Math.random() - 0.5) * jitter * 0.6;
+          pvy[i] += (Math.random() - 0.5) * jitter * 0.6;
         }
 
-        // Slight organic turbulence always present
-        p.vx += (Math.random() - 0.5) * 0.25;
-        p.vy += (Math.random() - 0.5) * 0.25;
-
-        // Extra flutter when held
-        if (phase === PHASES.HOLD) {
-          p.vx += (Math.random() - 0.5) * 0.6;
-          p.vy += (Math.random() - 0.5) * 0.6;
-          p.vx *= 0.7;
-          p.vy *= 0.7;
+        pvx[i] *= damp;
+        pvy[i] *= damp;
+        const spd = Math.sqrt(pvx[i] * pvx[i] + pvy[i] * pvy[i]);
+        if (spd > maxSpd) {
+          const inv = maxSpd / spd;
+          pvx[i] *= inv; pvy[i] *= inv;
         }
-
-        p.vx *= damping;
-        p.vy *= damping;
-        p.x += p.vx;
-        p.y += p.vy;
-
-        // Twinkle alpha
-        const twinkle = 0.75 + 0.25 * Math.sin(Date.now() * p.twinkleSpeed * 0.001 + p.twinkleOffset);
-        const a = p.alpha * twinkle;
-
-        // Glow halo
-        ctx.save();
-        ctx.globalAlpha = a * 0.35;
-        ctx.shadowBlur = 0;
-        const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size * 5);
-        g.addColorStop(0, p.color);
-        g.addColorStop(1, 'rgba(0,0,0,0)');
-        ctx.fillStyle = g;
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.size * 5, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
-
-        // Core dot with shadow glow
-        ctx.save();
-        ctx.globalAlpha = a;
-        ctx.shadowColor = p.color;
-        ctx.shadowBlur = p.size * 6;
-        ctx.fillStyle = p.color;
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
+        px[i] += pvx[i];
+        py[i] += pvy[i];
       }
 
-      // Pattern name label
-      if (labelAlpha > 0) {
-        ctx.save();
-        ctx.globalAlpha = labelAlpha * 0.55;
-        ctx.font = `bold ${Math.min(W, H) * 0.06}px serif`;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillStyle = '#C9A84C';
-        ctx.shadowColor = '#C9A84C';
-        ctx.shadowBlur = 30;
-        ctx.fillText(PATTERN_NAMES[patternIdx], W / 2, H / 2);
-        ctx.restore();
-      }
+      // ── render ──────────────────────────────────────────────────────────
+
+      // trail: alpha-clear for smoke / gas tail effect
+      const trailA = phase === PHASE_HOLD ? 0.50
+                   : phase === PHASE_FORMING ? 0.22
+                   : 0.10;
+      ctx.fillStyle = `rgba(8,12,20,${trailA})`;
+      ctx.fillRect(0, 0, W, H);
+
+      // bloom layer (draw to small glow canvas then composite with screen+blur)
+      gCtx.clearRect(0, 0, W, H);
+      gCtx.globalAlpha = 0.52;
+      drawParticles(gCtx, 1 / 0.4);      // coordinate scale = 1/glow_scale
+      gCtx.globalAlpha = 1;
+
+      ctx.save();
+      ctx.filter = 'blur(6px) brightness(1.5)';
+      ctx.globalCompositeOperation = 'screen';
+      ctx.globalAlpha = 0.75;
+      ctx.drawImage(glow, 0, 0, W, H);
+      ctx.restore();
+
+      // sharp core
+      ctx.save();
+      ctx.globalAlpha = 0.93;
+      drawParticles(ctx, 1);
+      ctx.restore();
 
       animId = requestAnimationFrame(tick);
     }
 
     tick();
 
-    const onResize = () => { resize(); setTargets(patternIdx); };
+    const onResize = () => { resize(); };
     window.addEventListener('resize', onResize);
-    return () => {
-      cancelAnimationFrame(animId);
-      window.removeEventListener('resize', onResize);
-    };
+    return () => { cancelAnimationFrame(animId); window.removeEventListener('resize', onResize); };
   }, []);
 
   return (
-    <canvas
-      ref={canvasRef}
-      className="absolute inset-0 w-full h-full pointer-events-none"
-      aria-hidden="true"
-    />
+    <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
+      <canvas ref={glowRef} className="hidden" />
+      <canvas ref={canvasRef} className="w-full h-full" />
+    </div>
   );
 }
