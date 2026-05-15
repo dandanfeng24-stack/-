@@ -10,7 +10,7 @@ import MastersPage from './pages/MastersPage';
 
 export default function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename="/-/">
       <Navbar />
       <AnimatePresence mode="wait">
         <Routes>

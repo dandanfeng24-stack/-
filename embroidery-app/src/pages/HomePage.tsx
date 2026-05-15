@@ -1,8 +1,9 @@
-import { useRef, useMemo } from 'react';
+import { useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, useInView, useScroll, useTransform } from 'framer-motion';
 import { ArrowRight, Play } from 'lucide-react';
 import { embroideryTypes, masters } from '../data/embroidery';
+import ParticleCanvas from '../components/ParticleCanvas';
 
 function ScrollReveal({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
   const ref = useRef(null);
@@ -25,20 +26,6 @@ export default function HomePage() {
   const heroOpacity = useTransform(scrollYProgress, [0, 0.7], [1, 0]);
   const heroY = useTransform(scrollYProgress, [0, 1], ['0%', '20%']);
 
-  const PARTICLE_COLORS = ['#C9A84C', '#C9A84C', '#C0392B', '#E8DCC8', '#C9A84C', '#F4D03F'];
-
-  // 固定粒子数据，避免每次渲染重新生成
-  const particles = useMemo(() =>
-    Array.from({ length: 200 }, (_, i) => ({
-      left: `${(i * 13.7 + 3) % 100}%`,
-      size: 1.5 + (i % 6) * 1.2,
-      color: PARTICLE_COLORS[i % PARTICLE_COLORS.length],
-      duration: `${5 + (i % 10)}s`,
-      delay: `${(i * 0.15) % 10}s`,
-      opacity: 0.3 + (i % 6) * 0.12,
-    })), []
-  );
-
   return (
     <div className="min-h-screen bg-[#080c14]">
 
@@ -47,25 +34,8 @@ export default function HomePage() {
         ref={heroRef}
         className="relative h-screen flex items-end overflow-hidden bg-[#040609]"
       >
-        {/* 粒子动态背景 */}
-        <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          {particles.map((p, i) => (
-            <span
-              key={i}
-              className="particle"
-              style={{
-                left: p.left,
-                bottom: '-8px',
-                width: p.size,
-                height: p.size,
-                background: p.color,
-                animationDuration: p.duration,
-                animationDelay: p.delay,
-                opacity: p.opacity,
-              }}
-            />
-          ))}
-        </div>
+        {/* 粒子成型动画 */}
+        <ParticleCanvas />
 
         {/* 径向光晕 */}
         <div className="absolute inset-0 pointer-events-none">
