@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { motion, useInView, useScroll, useTransform } from 'framer-motion';
 import { ArrowRight, Play } from 'lucide-react';
 import { embroideryTypes, masters } from '../data/embroidery';
-import ParticleCanvas from '../components/ParticleCanvas';
+import NeedleTrace from '../components/NeedleTrace';
 
 function ScrollReveal({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
   const ref = useRef(null);
@@ -34,8 +34,8 @@ export default function HomePage() {
         ref={heroRef}
         className="relative h-screen flex items-end overflow-hidden bg-[#040609]"
       >
-        {/* 粒子成型动画 */}
-        <ParticleCanvas />
+        {/* SVG 针线描边动画 */}
+        <NeedleTrace />
 
         {/* 径向光晕 */}
         <div className="absolute inset-0 pointer-events-none">
