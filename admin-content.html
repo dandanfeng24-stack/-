@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>内容管理 - 财富路径引导</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="app-shell admin-content-shell">
+    
+<nav class="top-nav">
+  <a class="brand brand-with-logo" href="index.html"><img src="assets/logo-icon-transparent.png" alt="财富路径引导 LOGO" /> <span>财富路径引导</span></a>
+  <div class="nav-links">
+    <a class="nav-link" href="app.html">方案库</a>
+    <a class="nav-link" href="admin-content.html">内容管理</a>
+    <a class="nav-link" href="resources.html">资料领取</a>
+    <a class="nav-link" href="profile.html">用户中心</a>
+    <a class="nav-link" href="admin.html">管理员统计</a>
+    <span data-auth-area></span>
+  </div>
+</nav>
+
+
+    <section class="page-title admin-content-title">
+      <div>
+        <span class="eyebrow">本地内容后台 · solutions.json 管理</span>
+        <h1>内容管理页</h1>
+        <p>用于审核、编辑、删除、导入候选方案，并导出新版 <code>solutions.json</code>。当前为本地静态版，不会直接写入电脑文件。</p>
+      </div>
+      <div class="admin-title-actions">
+        <button class="ghost-btn" id="reloadBtn">重新载入正式库</button>
+        <button class="primary-btn" id="exportBtn">导出新版 solutions.json</button>
+      </div>
+    </section>
+
+    <section class="admin-toolbar panel-card">
+      <div class="admin-import-row">
+        <div>
+          <h2>导入候选内容</h2>
+          <p>导入 Skill 生成的 <code>candidate_solutions.json</code> 或新版 <code>solutions.json</code>，可逐条审核后合并。</p>
+        </div>
+        <label class="file-import-btn">
+          选择 JSON 文件
+          <input type="file" id="importFile" accept=".json,application/json" />
+        </label>
+      </div>
+
+      <div class="admin-stats-grid">
+        <div class="stat-card"><strong id="statTotal">0</strong><span>正式方案</span></div>
+        <div class="stat-card"><strong id="statCandidates">0</strong><span>候选方案</span></div>
+        <div class="stat-card"><strong id="statSelected">0</strong><span>当前选中</span></div>
+        <div class="stat-card"><strong id="statIncomplete">0</strong><span>详情缺失</span></div>
+      </div>
+    </section>
+
+    <section class="admin-workbench">
+      <aside class="admin-list-panel panel-card">
+        <div class="admin-list-head">
+          <h2>方案列表</h2>
+          <div class="admin-mode-tabs">
+            <button class="small-btn active" data-mode="official">正式库</button>
+            <button class="small-btn" data-mode="candidate">候选库</button>
+          </div>
+        </div>
+
+        <div class="admin-filters">
+          <input id="searchInput" placeholder="搜索标题 / 标签 / 说明" />
+          <select id="categoryFilter">
+            <option value="all">全部入口</option>
+            <option value="part-time">闲暇时间</option>
+            <option value="skill">专业技能</option>
+            <option value="investment">小额资金</option>
+          </select>
+          <select id="riskFilterAdmin">
+            <option value="all">全部风险</option>
+            <option value="low">低风险</option>
+            <option value="medium">中风险</option>
+            <option value="high">高风险</option>
+          </select>
+          <select id="detailFilter">
+            <option value="all">详情状态不限</option>
+            <option value="complete">详情完整</option>
+            <option value="incomplete">详情缺失</option>
+          </select>
+        </div>
+
+        <div class="admin-bulk-actions">
+          <button class="ghost-btn" id="mergeAllBtn">候选全部合并</button>
+          <button class="danger-btn" id="clearCandidatesBtn">清空候选</button>
+        </div>
+
+        <div id="solutionList" class="solution-admin-list"></div>
+      </aside>
+
+      <section class="admin-editor-panel panel-card">
+        <div class="admin-editor-head">
+          <h2 id="editorTitle">编辑方案</h2>
+          <div class="admin-editor-actions">
+            <button class="ghost-btn" id="duplicateBtn">复制为新方案</button>
+            <button class="danger-btn" id="deleteBtn">删除当前方案</button>
+            <button class="primary-btn" id="saveBtn">保存到当前库</button>
+          </div>
+        </div>
+
+        <div id="editorEmpty" class="notice">请从左侧选择一条方案。</div>
+
+        <form id="editorForm" class="admin-editor-form hidden">
+          <div class="admin-form-grid">
+            <div class="field">
+              <label>ID</label>
+              <input name="id" />
+            </div>
+            <div class="field">
+              <label>标题</label>
+              <input name="title" />
+            </div>
+          </div>
+
+          <div class="field">
+            <label>卡片简介 description</label>
+            <textarea name="description"></textarea>
+          </div>
+
+          <div class="admin-form-grid-4">
+            <div class="field">
+              <label>入口 category</label>
+              <select name="category">
+                <option value="part-time">我有闲暇时间</option>
+                <option value="skill">我有专业技能</option>
+                <option value="investment">我有小额资金</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>行业 industry_category</label>
+              <input name="industry_category" placeholder="local-service" />
+            </div>
+            <div class="field">
+              <label>赚钱模式 income_model</label>
+              <input name="income_model" placeholder="service-fee" />
+            </div>
+            <div class="field">
+              <label>难度 difficulty</label>
+              <select name="difficulty">
+                <option value="1">1 星</option>
+                <option value="2">2 星</option>
+                <option value="3">3 星</option>
+                <option value="4">4 星</option>
+                <option value="5">5 星</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="admin-form-grid-4">
+            <div class="field">
+              <label>时间 required_time</label>
+              <select name="required_time">
+                <option value="low">低</option>
+                <option value="medium">中</option>
+                <option value="high">高</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>技能 required_skill</label>
+              <select name="required_skill">
+                <option value="low">低</option>
+                <option value="medium">中</option>
+                <option value="high">高</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>资金 required_money</label>
+              <select name="required_money">
+                <option value="low">低</option>
+                <option value="medium">中</option>
+                <option value="high">高</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>风险 risk_level</label>
+              <select name="risk_level">
+                <option value="low">低</option>
+                <option value="medium">中</option>
+                <option value="high">高</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="admin-form-grid">
+            <div class="field">
+              <label>标签 industry_tags，逗号分隔</label>
+              <input name="industry_tags" />
+            </div>
+            <div class="field">
+              <label>可信度 credibility_score</label>
+              <select name="credibility_score">
+                <option value="1">1 分</option>
+                <option value="2">2 分</option>
+                <option value="3">3 分</option>
+                <option value="4">4 分</option>
+                <option value="5">5 分</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="field">
+            <label>行动步骤 steps，每行一条</label>
+            <textarea name="steps"></textarea>
+          </div>
+
+          <div class="admin-form-grid">
+            <div class="field">
+              <label>来源标题 source_title</label>
+              <input name="source_title" />
+            </div>
+            <div class="field">
+              <label>来源链接 source_url</label>
+              <input name="source_url" />
+            </div>
+          </div>
+
+          <div class="field">
+            <label>来源依据摘要 source_evidence_summary</label>
+            <textarea name="source_evidence_summary"></textarea>
+          </div>
+
+          <div class="admin-detail-divider">
+            <h3>详情页字段 detail</h3>
+            <span>这些字段会显示在注册用户专属方案详情页。</span>
+          </div>
+
+          <div class="field">
+            <label>核心逻辑 core_logic</label>
+            <textarea name="detail.core_logic"></textarea>
+          </div>
+
+          <div class="admin-form-grid">
+            <div class="field">
+              <label>目标客户 target_customer</label>
+              <textarea name="detail.target_customer"></textarea>
+            </div>
+            <div class="field">
+              <label>成交理由 payment_reason</label>
+              <textarea name="detail.payment_reason"></textarea>
+            </div>
+          </div>
+
+          <div class="admin-form-grid">
+            <div class="field">
+              <label>第一单策略 first_order_strategy</label>
+              <textarea name="detail.first_order_strategy"></textarea>
+            </div>
+            <div class="field">
+              <label>最容易失败 key_failure_point</label>
+              <textarea name="detail.key_failure_point"></textarea>
+            </div>
+          </div>
+
+          <div class="field">
+            <label>交付流程 delivery_process，每行一条</label>
+            <textarea name="detail.delivery_process"></textarea>
+          </div>
+
+          <div class="admin-form-grid">
+            <div class="field">
+              <label>适合人群 suitable_people，每行一条</label>
+              <textarea name="detail.suitable_people"></textarea>
+            </div>
+            <div class="field">
+              <label>不适合人群 unsuitable_people，每行一条</label>
+              <textarea name="detail.unsuitable_people"></textarea>
+            </div>
+          </div>
+
+          <div class="field">
+            <label>启动成本 startup_cost</label>
+            <textarea name="detail.startup_cost"></textarea>
+          </div>
+
+          <div class="field">
+            <label>第一周计划 first_week_plan，每行一条</label>
+            <textarea name="detail.first_week_plan"></textarea>
+          </div>
+
+          <div class="admin-form-grid">
+            <div class="field">
+              <label>获客渠道 customer_channels，每行一条</label>
+              <textarea name="detail.customer_channels"></textarea>
+            </div>
+            <div class="field">
+              <label>所需工具 tools_needed，每行一条</label>
+              <textarea name="detail.tools_needed"></textarea>
+            </div>
+          </div>
+
+          <div class="admin-form-grid">
+            <div class="field">
+              <label>可交付内容 deliverables，每行一条</label>
+              <textarea name="detail.deliverables"></textarea>
+            </div>
+            <div class="field">
+              <label>资料包建议 resource_pack_suggestions，每行一条</label>
+              <textarea name="detail.resource_pack_suggestions"></textarea>
+            </div>
+          </div>
+
+          <div class="field">
+            <label>定价参考 pricing_reference</label>
+            <textarea name="detail.pricing_reference"></textarea>
+          </div>
+
+          <div class="field">
+            <label>风险提醒 risk_notes，每行一条</label>
+            <textarea name="detail.risk_notes"></textarea>
+          </div>
+
+          <div class="field">
+            <label>升级路径 upgrade_path</label>
+            <textarea name="detail.upgrade_path"></textarea>
+          </div>
+        </form>
+      </section>
+    </section>
+  </main>
+
+  <script src="auth.js"></script>
+  <script src="labels.js"></script>
+  <script src="admin-content.js"></script>
+</body>
+</html>

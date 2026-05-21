@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>财富路径引导 App</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="app-shell">
+    
+<nav class="top-nav">
+  <a class="brand brand-with-logo" href="index.html"><img src="assets/logo-icon-transparent.png" alt="财富路径引导 LOGO" /> <span>财富路径引导</span></a>
+  <div class="nav-links">
+    <a class="nav-link" href="app.html">方案库</a>
+    <a class="nav-link" href="admin-content.html">内容管理</a>
+    <a class="nav-link" href="resources.html">资料领取</a>
+    <a class="nav-link" href="profile.html">用户中心</a>
+    <a class="nav-link" href="admin.html">管理员统计</a>
+    <span data-auth-area></span>
+  </div>
+</nav>
+
+    <section class="hero">
+      <div class="eyebrow">游客可完整浏览 · 注册后进入客户数据库 · 可收藏和领取资料</div>
+      <h1>财富路径引导</h1>
+      <p>未注册用户可以完整浏览全部赚钱方案库。注册后，用户信息会进入本地客户数据库，并可收藏方案、领取资料、查看个人记录，便于后续资料分发和用户统计。</p>
+    </section>
+
+    <section class="selector-panel" aria-label="条件选择">
+      <button class="choice-btn active" data-category="all">
+        <div class="choice-icon">🔎</div>
+        <h2>全部方案</h2>
+        <p>浏览完整赚钱方案库，再按行业、模式、难度和风险继续筛选。</p>
+      </button>
+      <button class="choice-btn" data-category="part-time">
+        <div class="choice-icon">⏱</div>
+        <h2>我有闲暇时间</h2>
+        <p>适合低门槛、轻技能、可用时间换现金流的副业路径。</p>
+      </button>
+      <button class="choice-btn" data-category="skill">
+        <div class="choice-icon">🧩</div>
+        <h2>我有专业技能</h2>
+        <p>适合把已有能力产品化、服务化、模板化，提高单位时间收益。</p>
+      </button>
+      <button class="choice-btn" data-category="investment">
+        <div class="choice-icon">💳</div>
+        <h2>我有小额资金</h2>
+        <p>适合小预算验证市场，通过工具、流量或轻资产项目放大收益。</p>
+      </button>
+    </section>
+
+    <section class="filter-panel">
+      <div class="field">
+        <label for="industryFilter">行业方向</label>
+        <select id="industryFilter">
+          <option value="all">全部行业</option>
+          <option value="online-light">线上轻资产</option>
+          <option value="local-service">本地生活服务</option>
+          <option value="skill-service">专业技能服务</option>
+          <option value="small-trade">小买卖 / 轻库存</option>
+          <option value="content-media">内容账号 / 自媒体</option>
+          <option value="knowledge-product">知识产品 / 数字产品</option>
+          <option value="tourism-culture">文旅 / 导览 / 城市服务</option>
+          <option value="pet-economy">宠物经济</option>
+          <option value="senior-economy">银发经济</option>
+          <option value="parenting">母婴 / 亲子</option>
+          <option value="food-beverage">餐饮 / 小吃 / 饮品</option>
+          <option value="enterprise-service">企业服务</option>
+          <option value="ai-service">AI 工具 / AI 服务</option>
+          <option value="resale">二手交易 / 转卖</option>
+          <option value="handmade">手作 / 文创 / 定制</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="incomeFilter">赚钱模式</label>
+        <select id="incomeFilter">
+          <option value="all">全部模式</option>
+          <option value="service-fee">服务收费</option>
+          <option value="product-sale">产品销售</option>
+          <option value="subscription">订阅收费</option>
+          <option value="commission">佣金 / 分成</option>
+          <option value="traffic-monetize">流量变现</option>
+          <option value="consulting">咨询诊断</option>
+          <option value="training">培训课程</option>
+          <option value="template-sale">模板 / 资料包售卖</option>
+          <option value="agency">代运营 / 代理服务</option>
+          <option value="resale-margin">低买高卖差价</option>
+          <option value="membership">会员制</option>
+          <option value="lead-generation">线索转化</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="difficultyFilter">最高难度</label>
+        <select id="difficultyFilter">
+          <option value="all">不限</option>
+          <option value="2">2 星以内</option>
+          <option value="3">3 星以内</option>
+          <option value="4">4 星以内</option>
+          <option value="5">5 星以内</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="riskFilter">最高风险</label>
+        <select id="riskFilter">
+          <option value="all">不限</option>
+          <option value="low">低风险</option>
+          <option value="medium">中风险以内</option>
+          <option value="high">高风险以内</option>
+        </select>
+      </div>
+    </section>
+
+    <section class="results-header">
+      <div>
+        <h3 id="resultsTitle">全部推荐方案</h3>
+        <span id="resultsHint">正在加载方案库。</span>
+      </div>
+    </section>
+
+    <section id="results" class="results-grid" aria-live="polite"></section>
+  </main>
+  <script src="auth.js"></script>
+  <script src="labels.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

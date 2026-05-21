@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>登录 - 财富路径引导</title><link rel="stylesheet" href="style.css"></head>
+<body>
+<main class="app-shell">
+  
+<nav class="top-nav">
+  <a class="brand brand-with-logo" href="index.html"><img src="assets/logo-icon-transparent.png" alt="财富路径引导 LOGO" /> <span>财富路径引导</span></a>
+  <div class="nav-links">
+    <a class="nav-link" href="app.html">方案库</a>
+    <a class="nav-link" href="admin-content.html">内容管理</a>
+    <a class="nav-link" href="resources.html">资料领取</a>
+    <a class="nav-link" href="profile.html">用户中心</a>
+    <a class="nav-link" href="admin.html">管理员统计</a>
+    <span data-auth-area></span>
+  </div>
+</nav>
+
+  <section class="form-wrap">
+    <div class="form-card">
+      <h1>登录</h1>
+      <p>登录后可以收藏赚钱方案、领取资料包，并在用户中心查看记录。</p>
+      <div class="notice">原型说明：当前登录信息保存在本机浏览器 localStorage 中，只用于本地测试，不适合正式上线。</div>
+      <form id="loginForm">
+        <div class="field"><label>邮箱</label><input name="email" type="email" required placeholder="your@email.com"></div>
+        <div class="field" style="margin-top:12px;"><label>密码</label><input name="password" type="password" required placeholder="请输入密码"></div>
+        <div class="form-actions">
+          <button class="primary-btn" type="submit">登录</button>
+          <a class="nav-link" id="goRegister" href="register.html">还没有账号？去注册</a>
+        </div>
+      </form>
+    </div>
+  </section>
+</main>
+<script src="auth.js"></script>
+<script>
+document.querySelector("#loginForm").addEventListener("submit", e => {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  try {
+    loginUser(fd.get("email"), fd.get("password"));
+    const params = new URLSearchParams(location.search);
+    location.href = params.get("next") || "app.html";
+  } catch(err) { alert(err.message); }
+});
+const goRegister = document.querySelector("#goRegister");
+if (goRegister) {
+  const params = new URLSearchParams(location.search);
+  const next = params.get("next");
+  if (next) goRegister.href = `register.html?next=${encodeURIComponent(next)}`;
+}
+</script>
+</body></html>

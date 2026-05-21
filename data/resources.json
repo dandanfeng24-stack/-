@@ -1,0 +1,26 @@
+[
+  {
+    "id": "res-001",
+    "title": "30个低成本赚钱方案执行清单",
+    "type": "PDF清单",
+    "description": "适合初次使用者快速理解不同副业路径的启动条件、风险和第一步行动。",
+    "requires_login": true,
+    "file_hint": "demo-resource-low-cost-ideas.pdf"
+  },
+  {
+    "id": "res-002",
+    "title": "本地生活服务获客话术模板",
+    "type": "话术模板",
+    "description": "适合宠物上门、陪诊、收纳、家政、文旅导览等本地服务。",
+    "requires_login": true,
+    "file_hint": "demo-local-service-scripts.docx"
+  },
+  {
+    "id": "res-003",
+    "title": "副业项目筛选表",
+    "type": "Excel模板",
+    "description": "从时间、技能、资金、风险、回报周期等维度比较不同赚钱方案。",
+    "requires_login": true,
+    "file_hint": "demo-side-hustle-scorecard.xlsx"
+  }
+]

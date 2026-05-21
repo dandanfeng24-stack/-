@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>客户数据库 / 管理员统计 - 财富路径引导</title><link rel="stylesheet" href="style.css"></head>
+<body>
+<main class="app-shell">
+  
+<nav class="top-nav">
+  <a class="brand brand-with-logo" href="index.html"><img src="assets/logo-icon-transparent.png" alt="财富路径引导 LOGO" /> <span>财富路径引导</span></a>
+  <div class="nav-links">
+    <a class="nav-link" href="app.html">方案库</a>
+    <a class="nav-link" href="admin-content.html">内容管理</a>
+    <a class="nav-link" href="resources.html">资料领取</a>
+    <a class="nav-link" href="profile.html">用户中心</a>
+    <a class="nav-link" href="admin.html">客户数据库 / 管理员统计</a>
+    <span data-auth-area></span>
+  </div>
+</nav>
+
+  <section class="page-title">
+    <h1>客户数据库 / 管理员统计</h1>
+    <p>本页面用于原型测试：注册用户会进入客户数据库；系统统计注册人数、登录行为、收藏、资料领取和热门方案。正式上线时应改为带权限控制的后台页面。</p>
+  </section>
+  <section class="grid-4">
+    <div class="stat-card"><strong id="statUsers">0</strong><span>注册用户</span></div>
+    <div class="stat-card"><strong id="statLogins">0</strong><span>登录次数</span></div>
+    <div class="stat-card"><strong id="statFavs">0</strong><span>收藏次数</span></div>
+    <div class="stat-card"><strong id="statDownloads">0</strong><span>资料领取</span></div>
+  </section>
+  <section class="grid-2" style="margin-top:18px;">
+    <div class="panel-card">
+      <h2>客户数据库</h2>
+      <div id="usersTable"></div>
+    </div>
+    <div class="panel-card">
+      <h2>热门行为</h2>
+      <div id="actionsTable"></div>
+    </div>
+  </section>
+  <section class="panel-card" style="margin-top:18px;">
+    <h2>导出运营数据</h2>
+    <p class="notice">可导出本机浏览器 localStorage 中的原型数据，便于查看测试结果。</p>
+    <button class="primary-btn" id="exportBtn">导出 JSON</button>
+    <button class="danger-btn" id="clearBtn">清空本机测试数据</button>
+  </section>
+</main>
+<script src="auth.js"></script>
+<script>
+function renderAdmin() {
+  const users = getUsers();
+  const actions = readStore(AUTH_KEYS.ACTIONS, []);
+  const favs = getFavorites();
+  const downloads = readStore(AUTH_KEYS.DOWNLOADS, []);
+  document.querySelector("#statUsers").textContent = users.length;
+  document.querySelector("#statLogins").textContent = actions.filter(a => a.action_type === "login").length;
+  document.querySelector("#statFavs").textContent = favs.length;
+  document.querySelector("#statDownloads").textContent = downloads.length;
+
+  document.querySelector("#usersTable").innerHTML = users.length ? `
+    <table class="table"><thead><tr><th>邮箱</th><th>城市</th><th>职业</th><th>注册时间</th></tr></thead><tbody>
+    ${users.map(u => `<tr><td>${u.email}</td><td>${u.city || "-"}</td><td>${u.occupation || "-"}</td><td>${new Date(u.created_at).toLocaleString()}</td></tr>`).join("")}
+    </tbody></table>` : `<div class="notice">暂无注册用户。</div>`;
+
+  const recent = actions.slice(-20).reverse();
+  document.querySelector("#actionsTable").innerHTML = recent.length ? `
+    <table class="table"><thead><tr><th>行为</th><th>用户</th><th>时间</th></tr></thead><tbody>
+    ${recent.map(a => `<tr><td>${a.action_type}</td><td>${a.user_email || a.user_id}</td><td>${new Date(a.created_at).toLocaleString()}</td></tr>`).join("")}
+    </tbody></table>` : `<div class="notice">暂无行为记录。</div>`;
+}
+document.querySelector("#exportBtn").addEventListener("click", () => {
+  const data = {
+    users: getUsers().map(u => { const x = {...u}; delete x.password; return x; }),
+    actions: readStore(AUTH_KEYS.ACTIONS, []),
+    favorites: getFavorites(),
+    downloads: readStore(AUTH_KEYS.DOWNLOADS, []),
+    exported_at: new Date().toISOString()
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type:"application/json"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "money-path-admin-export.json";
+  a.click();
+  URL.revokeObjectURL(url);
+});
+document.querySelector("#clearBtn").addEventListener("click", () => {
+  if (!confirm("确定清空本机测试用户、收藏、下载和行为数据？")) return;
+  Object.values(AUTH_KEYS).forEach(k => localStorage.removeItem(k));
+  renderAdmin();
+  updateNavAuth();
+});
+renderAdmin();
+</script>
+</body></html>

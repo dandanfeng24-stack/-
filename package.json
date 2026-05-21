@@ -1,0 +1,9 @@
+{
+  "name": "money-path-app",
+  "version": "0.1.0",
+  "private": true,
+  "description": "财富路径引导网页App，本地静态原型与内容管理工作区",
+  "scripts": {
+    "start": "node server.js"
+  }
+}

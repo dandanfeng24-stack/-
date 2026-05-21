@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>用户中心 - 财富路径引导</title><link rel="stylesheet" href="style.css"></head>
+<body>
+<main class="app-shell">
+  
+<nav class="top-nav">
+  <a class="brand brand-with-logo" href="index.html"><img src="assets/logo-icon-transparent.png" alt="财富路径引导 LOGO" /> <span>财富路径引导</span></a>
+  <div class="nav-links">
+    <a class="nav-link" href="app.html">方案库</a>
+    <a class="nav-link" href="admin-content.html">内容管理</a>
+    <a class="nav-link" href="resources.html">资料领取</a>
+    <a class="nav-link" href="profile.html">用户中心</a>
+    <a class="nav-link" href="admin.html">管理员统计</a>
+    <span data-auth-area></span>
+  </div>
+</nav>
+
+  <section class="page-title">
+    <h1>用户中心</h1>
+    <p>查看用户资料、收藏方案、资料领取记录和浏览行为。</p>
+  </section>
+  <section class="grid-2">
+    <div class="panel-card">
+      <h2>我的资料</h2>
+      <div id="userInfo" class="notice"></div>
+      <button class="danger-btn" onclick="logout()">退出登录</button>
+    </div>
+    <div class="panel-card">
+      <h2>我的收藏</h2>
+      <div id="favList" class="notice"></div>
+    </div>
+  </section>
+  <section class="panel-card" style="margin-top:18px;">
+    <h2>资料领取记录</h2>
+    <div id="downloadList" class="notice"></div>
+  </section>
+</main>
+<script src="auth.js"></script>
+<script>
+const user = requireLogin();
+if (user) {
+  document.querySelector("#userInfo").innerHTML = `
+    <p><strong>昵称：</strong>${user.nickname}</p>
+    <p><strong>邮箱：</strong>${user.email}</p>
+    <p><strong>城市：</strong>${user.city || "未填写"}</p>
+    <p><strong>职业：</strong>${user.occupation || "未填写"}</p>
+    <p><strong>时间投入：</strong>${user.time_budget || "未填写"}</p>
+    <p><strong>资金预算：</strong>${user.money_budget || "未填写"}</p>
+    <p><strong>技能标签：</strong>${user.skill_tags || "未填写"}</p>
+  `;
+  const favs = getFavorites().filter(f => f.user_id === user.id);
+  document.querySelector("#favList").innerHTML = favs.length ? favs.map(f => `<p>• ${f.solution_title}<br><small>${new Date(f.created_at).toLocaleString()}</small></p>`).join("") : "暂无收藏。";
+  const downs = readStore(AUTH_KEYS.DOWNLOADS, []).filter(d => d.user_id === user.id);
+  document.querySelector("#downloadList").innerHTML = downs.length ? downs.map(d => `<p>• ${d.resource_title}<br><small>${new Date(d.created_at).toLocaleString()}</small></p>`).join("") : "暂无领取记录。";
+}
+</script>
+</body></html>

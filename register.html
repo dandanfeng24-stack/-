@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>注册 - 财富路径引导</title><link rel="stylesheet" href="style.css"></head>
+<body>
+<main class="app-shell">
+  
+<nav class="top-nav">
+  <a class="brand brand-with-logo" href="index.html"><img src="assets/logo-icon-transparent.png" alt="财富路径引导 LOGO" /> <span>财富路径引导</span></a>
+  <div class="nav-links">
+    <a class="nav-link" href="app.html">方案库</a>
+    <a class="nav-link" href="admin-content.html">内容管理</a>
+    <a class="nav-link" href="resources.html">资料领取</a>
+    <a class="nav-link" href="profile.html">用户中心</a>
+    <a class="nav-link" href="admin.html">管理员统计</a>
+    <span data-auth-area></span>
+  </div>
+</nav>
+
+  <section class="form-wrap">
+    <div class="form-card">
+      <h1>注册账号</h1>
+      <p>填写基础信息后，该用户会进入客户数据库，用于后续资料分发、用户画像和访问统计。</p>
+      <div class="notice">原型版不做短信验证和真实数据库。正式上线时需接入安全认证和隐私合规机制。</div>
+      <form id="registerForm">
+        <div class="field"><label>昵称</label><input name="nickname" required placeholder="例如：Dandan"></div>
+        <div class="field" style="margin-top:12px;"><label>邮箱</label><input name="email" type="email" required placeholder="your@email.com"></div>
+        <div class="field" style="margin-top:12px;"><label>密码</label><input name="password" type="password" required minlength="6" placeholder="至少 6 位"></div>
+        <div class="grid-2" style="margin-top:12px;">
+          <div class="field"><label>所在城市</label><input name="city" placeholder="例如：南昌"></div>
+          <div class="field"><label>职业类型</label><input name="occupation" placeholder="例如：上班族 / 自由职业"></div>
+        </div>
+        <div class="grid-2" style="margin-top:12px;">
+          <div class="field"><label>每日可投入时间</label>
+            <select name="time_budget"><option value="">请选择</option><option value="low">1小时以内</option><option value="medium">1-3小时</option><option value="high">3小时以上</option></select>
+          </div>
+          <div class="field"><label>可接受启动资金</label>
+            <select name="money_budget"><option value="">请选择</option><option value="low">1000元以内</option><option value="medium">1000-10000元</option><option value="high">10000元以上</option></select>
+          </div>
+        </div>
+        <div class="field" style="margin-top:12px;"><label>擅长技能 / 感兴趣方向</label><input name="skill_tags" placeholder="例如：文案、设计、文旅、本地服务"></div>
+        <div class="form-actions">
+          <button class="primary-btn" type="submit">注册并登录</button>
+          <a class="nav-link" href="login.html">已有账号？去登录</a>
+        </div>
+      </form>
+    </div>
+  </section>
+</main>
+<script src="auth.js"></script>
+<script>
+document.querySelector("#registerForm").addEventListener("submit", e => {
+  e.preventDefault();
+  const data = Object.fromEntries(new FormData(e.target).entries());
+  try {
+    registerUser(data);
+    const params = new URLSearchParams(location.search);
+    location.href = params.get("next") || "app.html";
+  } catch(err) { alert(err.message); }
+});
+</script>
+</body></html>
