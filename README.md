@@ -134,16 +134,9 @@
 - 隐私政策和用户协议
 - 数据库和后台权限
 
-## 本地启动
-
-进入项目根目录后运行：
-
-```bash
-cmd /c npx --yes serve . -l 61188
-```
 
 浏览器打开：
 
 ```txt
-http://localhost:61188
+https://caifu-path.vercel.app/index.html
 ```
